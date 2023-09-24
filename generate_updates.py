@@ -160,17 +160,13 @@ def run_cmd(cmd, shlex_reformat=False, shell=False, logger=None, **kwargs):
 
     # reformat cmd
     if shlex_reformat:
-        if isinstance(cmd, list):
-            cmd_str = ' '.join(cmd)
-        else:
-            cmd_str = cmd
+        cmd_str = ' '.join(cmd) if isinstance(cmd, list) else cmd
         cmd = shlex.split(cmd_str)
 
     if logger:
         logger.info('cmd: %s, %s', cmd, kwargs)
 
-    extra_env = kwargs.pop('env', {})
-    if extra_env:
+    if extra_env := kwargs.pop('env', {}):
         env = os.environ.copy()
         env.update(extra_env)
         kwargs['env'] = env
@@ -188,7 +184,7 @@ def ensure_dir(path):
     # lg.debug('ensure dir: {}'.format(path))
     if os.path.exists(path):
         if not os.path.isdir(path):
-            raise IOError('ensure_dir: {} must be a directory'.format(path))
+            raise IOError(f'ensure_dir: {path} must be a directory')
     else:
         lg.debug('mkdir %s', path)
         try:
