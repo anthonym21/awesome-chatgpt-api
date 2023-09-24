@@ -62,12 +62,9 @@ def main():
             config = json.load(f)
         for k, v in config.items():
             setattr(Config, k, v)
-    # override config from env
-    env_api_key = os.environ.get('AI_PY_API_KEY')
-    if env_api_key:
+    if env_api_key := os.environ.get('AI_PY_API_KEY'):
         Config.api_key = env_api_key
-    env_api_base_url = os.environ.get('AI_PY_API_BASE_URL')
-    if env_api_base_url:
+    if env_api_base_url := os.environ.get('AI_PY_API_BASE_URL'):
         Config.api_base_url = env_api_base_url
     # override config from args
     Config.verbose = args.verbose
@@ -86,8 +83,7 @@ def main():
 
     # only read stdin when it's not a tty (which means in a pipe) to ensure it won't affect input()
     if not sys.stdin.isatty():
-        stdin = sys.stdin.read().strip()
-        if stdin:
+        if stdin := sys.stdin.read().strip():
             args.prompt = f'{args.prompt} {stdin}'
 
     # load prompts
@@ -156,23 +152,22 @@ command_set_keys = ['model', 'params', 'system', 'conversation', 'verbose']
 def run_command(session, pm, prompt):
     sp = prompt.split(' ')
     command = sp[0][1:]
-    args = sp[1:]
-    if command == 'set':
-        set_key = args[0]
-        assert set_key in command_set_keys, f'set key is not one of {command_set_keys}'
-
-        if set_key == 'verbose':
-            Config.verbose = bool(args[1])
-        elif set_key == 'conversation':
-            session.conversation = bool(args[1])
-        elif set_key == 'system':
-            session.update_system_message(pm.new_system_message(' '.join(args[1:])))
-        elif set_key == 'params':
-            session.params[args[1]] = args[2]
-        elif set_key == 'model':
-            session.model = args[1]
-    else:
+    if command != 'set':
         raise Exception(f'unknown command: {command}')
+    args = sp[1:]
+    set_key = args[0]
+    assert set_key in command_set_keys, f'set key is not one of {command_set_keys}'
+
+    if set_key == 'conversation':
+        session.conversation = bool(args[1])
+    elif set_key == 'model':
+        session.model = args[1]
+    elif set_key == 'params':
+        session.params[args[1]] = args[2]
+    elif set_key == 'system':
+        session.update_system_message(pm.new_system_message(' '.join(args[1:])))
+    elif set_key == 'verbose':
+        Config.verbose = bool(args[1])
 
 
 inline_code_re = re.compile(r'`([^\n`]+)`')
@@ -360,7 +355,7 @@ def esc(*codes: Union[int, str]) -> str:
     """Produces an ANSI escape code from a list of integers
     :rtype: text_type
     """
-    return '\x1b[{}m'.format(';'.join(str(c) for c in codes))
+    return f"\x1b[{';'.join(str(c) for c in codes)}m"
 
 
 def make_color(start, end: str) -> Callable[[str], str]:
